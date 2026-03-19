@@ -1,0 +1,196 @@
+openapi: 3.0.3
+info:
+  title: fQRGen REST API
+  description: |
+    fQRGen QR 코드 생성 REST API.
+    macOS 네이티브 앱(Swift/NWListener)과 Node.js 웹 앱(Express) 두 가지 서버 구현을 제공하며,
+    동일한 API 인터페이스(`/api/generate`)를 공유합니다.
+  version: 1.0.0
+  contact:
+    name: fQRGen
+    url: https://github.com/nowage/fQRGen
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3014
+    description: 로컬 개발 서버 (macOS 앱 또는 Node.js)
+
+paths:
+  /:
+    get:
+      summary: 서버 상태 확인 (Health Check)
+      description: |
+        서버가 정상적으로 실행 중인지 확인합니다.
+        - **macOS 앱**: JSON 상태 객체 반환
+        - **Node.js**: 웹 UI 페이지 반환 (HTML)
+      operationId: healthCheck
+      tags:
+        - 상태
+      responses:
+        '200':
+          description: 서버 정상 동작
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: ok
+                app: fQRGen
+                port: 3014
+            text/html:
+              schema:
+                type: string
+                description: 웹 UI 페이지 (Node.js 서버만 해당)
+
+  /api/generate:
+    post:
+      summary: QR 코드 생성
+      description: |
+        텍스트 또는 URL을 입력받아 QR 코드 이미지를 생성합니다.
+        PNG 바이너리 또는 SVG 문자열로 반환됩니다.
+
+        **macOS 앱 추가 동작**: REST 요청 시 앱 UI의 입력란에 데이터가 자동 반영되고,
+        QR 생성이 트리거되어 히스토리에 저장됩니다.
+      operationId: generateQRCode
+      tags:
+        - QR 생성
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateRequest'
+            examples:
+              url:
+                summary: URL QR 코드
+                value:
+                  data: "https://finfra.kr"
+                  format: png
+                  scale: 10
+              text:
+                summary: 텍스트 QR 코드
+                value:
+                  data: "Hello World"
+                  format: svg
+              default:
+                summary: 기본값 사용 (빈 요청)
+                value: {}
+      responses:
+        '200':
+          description: QR 코드 생성 성공
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+                description: QR 코드 PNG 이미지
+            image/svg+xml:
+              schema:
+                type: string
+                description: QR 코드 SVG 문자열
+        '400':
+          description: 잘못된 요청 (JSON 파싱 실패)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Invalid JSON"
+        '500':
+          description: 서버 내부 오류 (QR 생성 실패)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "QR 코드 생성 중 오류 발생"
+
+  /download/{filename}:
+    get:
+      summary: QR 이미지 다운로드 (Node.js 전용)
+      description: |
+        웹 UI에서 생성된 QR 코드 이미지를 다운로드합니다.
+        Node.js 서버에서만 제공됩니다.
+      operationId: downloadQRImage
+      tags:
+        - 다운로드
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 다운로드할 QR 이미지 파일명
+          example: "qr-1710000000000.png"
+      responses:
+        '200':
+          description: 파일 다운로드
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/svg+xml:
+              schema:
+                type: string
+        '404':
+          description: 파일을 찾을 수 없음
+
+components:
+  schemas:
+    GenerateRequest:
+      type: object
+      properties:
+        data:
+          type: string
+          description: QR 코드에 인코딩할 텍스트 또는 URL
+          default: "https://example.com"
+          example: "https://finfra.kr"
+        format:
+          type: string
+          enum:
+            - png
+            - svg
+          default: png
+          description: 출력 형식 (PNG 바이너리 또는 SVG 문자열)
+        scale:
+          type: integer
+          description: QR 이미지 크기 배율 (PNG 전용, SVG는 무시)
+          minimum: 5
+          maximum: 20
+          default: 10
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+        app:
+          type: string
+          example: fQRGen
+        port:
+          type: integer
+          example: 3014
+      required:
+        - status
+        - app
+        - port
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: 에러 메시지
+      required:
+        - error
+
+tags:
+  - name: 상태
+    description: 서버 상태 확인
+  - name: QR 생성
+    description: QR 코드 생성 API
+  - name: 다운로드
+    description: 생성된 QR 이미지 다운로드 (Node.js 전용)

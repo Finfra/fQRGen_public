@@ -1,0 +1,10 @@
+{
+  "name": "fqrgen",
+  "description": "Generate QR codes from URL/text via fQRGen REST API",
+  "version": "1.0.0",
+  "author": {
+    "name": "nowage"
+  },
+  "homepage": "https://github.com/nowage/fQRGen",
+  "repository": "https://github.com/nowage/fQRGen"
+}

@@ -1,0 +1,223 @@
+openapi: 3.0.3
+info:
+  title: fQRGen REST API
+  description: |
+    fQRGen QR Code Generation REST API.
+    Two server implementations are provided — a macOS native app (Swift/NWListener)
+    and a Node.js web app (Express) — both sharing the same API interface (`/api/generate`).
+
+    ## Security
+
+    - The API server is **disabled by default** and must be explicitly enabled in Settings.
+    - By default, only **localhost (127.0.0.1)** connections are accepted.
+    - External access can be enabled via the "Allow External Access" checkbox in Settings,
+      which unlocks the CIDR input field for specifying an allowed IP range (e.g. `192.168.0.0/24`).
+    - Connections from IPs outside the allowed CIDR range receive a `403 Forbidden` response.
+    - localhost is always allowed regardless of CIDR settings.
+  version: 1.0.0
+  contact:
+    name: fQRGen
+    url: https://github.com/nowage/fQRGen
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3014
+    description: Local development server (default port, configurable in Settings)
+
+paths:
+  /:
+    get:
+      summary: Health Check
+      description: |
+        Checks whether the server is running normally.
+        - **macOS app**: Returns a JSON status object
+        - **Node.js**: Returns a web UI page (HTML)
+      operationId: healthCheck
+      tags:
+        - Status
+      responses:
+        '200':
+          description: Server is running
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: ok
+                app: fQRGen
+                port: 3014
+            text/html:
+              schema:
+                type: string
+                description: Web UI page (Node.js server only)
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/generate:
+    post:
+      summary: Generate QR Code
+      description: |
+        Generates a QR code image from text or URL input.
+        Returns either a PNG binary or an SVG string.
+
+        **macOS app additional behavior**: When a REST request is received,
+        the data is automatically reflected in the app's UI input field,
+        QR generation is triggered, and the result is saved to history.
+      operationId: generateQRCode
+      tags:
+        - QR Generation
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateRequest'
+            examples:
+              url:
+                summary: URL QR Code
+                value:
+                  data: "https://finfra.kr"
+                  format: png
+                  scale: 10
+              text:
+                summary: Text QR Code (SVG)
+                value:
+                  data: "Hello World"
+                  format: svg
+              default:
+                summary: Using defaults (empty request)
+                value: {}
+      responses:
+        '200':
+          description: QR code generated successfully
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+                description: QR code PNG image
+            image/svg+xml:
+              schema:
+                type: string
+                description: QR code SVG string
+        '400':
+          description: Bad Request (JSON parsing failed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Invalid JSON"
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Internal Server Error (QR generation failed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "QR code generation failed"
+
+  /download/{filename}:
+    get:
+      summary: Download QR Image (Node.js only)
+      description: |
+        Downloads a QR code image generated via the web UI.
+        Available only on the Node.js server.
+      operationId: downloadQRImage
+      tags:
+        - Download
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+          description: QR image filename to download
+          example: "qr-1710000000000.png"
+      responses:
+        '200':
+          description: File download
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/svg+xml:
+              schema:
+                type: string
+        '404':
+          description: File not found
+
+components:
+  schemas:
+    GenerateRequest:
+      type: object
+      properties:
+        data:
+          type: string
+          description: Text or URL to encode in the QR code
+          default: "https://example.com"
+          example: "https://finfra.kr"
+        format:
+          type: string
+          enum:
+            - png
+            - svg
+          default: png
+          description: Output format (PNG binary or SVG string)
+        scale:
+          type: integer
+          description: QR image size multiplier (PNG only, SVG ignores this)
+          minimum: 5
+          maximum: 20
+          default: 10
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+        app:
+          type: string
+          example: fQRGen
+        port:
+          type: integer
+          example: 3014
+      required:
+        - status
+        - app
+        - port
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      required:
+        - error
+
+  responses:
+    Forbidden:
+      description: |
+        Forbidden — client IP is not in the allowed CIDR range.
+        By default only localhost (127.0.0.1) is permitted.
+        Enable "Allow External Access" in Settings and configure the CIDR to allow other IPs.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Forbidden"
+
+tags:
+  - name: Status
+    description: Server status check
+  - name: QR Generation
+    description: QR code generation API
+  - name: Download
+    description: Download generated QR images (Node.js only)
