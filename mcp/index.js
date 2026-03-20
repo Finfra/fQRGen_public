@@ -7,19 +7,20 @@
  *   node index.js [--server=<url>]
  *
  * Arguments:
- *   --server=<url> : (옵션) fQRGen REST API 서버 주소 (기본값: http://localhost:3014)
+ *   --server=<url> : (Optional) fQRGen REST API server URL (default: http://localhost:3014)
  *
  * Environment:
- *   FQRGEN_SERVER : fQRGen REST API 서버 주소 (--server 옵션보다 우선순위 낮음)
+ *   FQRGEN_SERVER : fQRGen REST API server URL (lower priority than --server)
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { writeFile, access } from "node:fs/promises";
+import { resolve, dirname, basename } from "node:path";
+import { homedir } from "node:os";
 
-// 서버 주소 결정: CLI 인자 > 환경변수 > 기본값
+// Determine server URL: CLI arg > env var > default
 function getServerUrl() {
   const arg = process.argv.find((a) => a.startsWith("--server="));
   if (arg) return arg.split("=").slice(1).join("=");
@@ -30,13 +31,13 @@ const SERVER_URL = getServerUrl();
 
 const server = new McpServer({
   name: "fqrgen-mcp",
-  version: "1.0.0",
+  version: "1.0.1",
 });
 
 // Tool: health_check
 server.tool(
   "health_check",
-  "fQRGen 서버 상태를 확인합니다",
+  "Check the fQRGen server status",
   {},
   async () => {
     try {
@@ -59,7 +60,7 @@ server.tool(
         content: [
           {
             type: "text",
-            text: `서버 응답: ${res.status} ${res.statusText} (HTML UI - Node.js 서버)`,
+            text: `Server response: ${res.status} ${res.statusText} (HTML UI - Node.js server)`,
           },
         ],
       };
@@ -69,7 +70,7 @@ server.tool(
         content: [
           {
             type: "text",
-            text: `서버 연결 실패: ${err.message}\n서버 주소: ${SERVER_URL}`,
+            text: `Server connection failed: ${err.message}\nServer URL: ${SERVER_URL}`,
           },
         ],
       };
@@ -80,20 +81,20 @@ server.tool(
 // Tool: generate_qr
 server.tool(
   "generate_qr",
-  "텍스트 또는 URL로 QR 코드를 생성합니다. PNG 바이너리 또는 SVG 문자열을 반환합니다.",
+  "Generate a QR code from text or URL. Returns PNG binary or SVG string.",
   {
     data: z
       .string()
       .default("https://example.com")
-      .describe("QR 코드에 인코딩할 텍스트 또는 URL"),
+      .describe("Text or URL to encode in the QR code"),
     format: z
       .enum(["png", "svg"])
       .default("png")
-      .describe("출력 형식: png 또는 svg"),
+      .describe("Output format: png or svg"),
     save_path: z
       .string()
       .optional()
-      .describe("(옵션) 생성된 QR 이미지를 저장할 파일 경로"),
+      .describe("(Optional) File path to save the generated QR image. Falls back to ~/Downloads if the directory does not exist."),
   },
   async ({ data, format, save_path }) => {
     try {
@@ -110,7 +111,7 @@ server.tool(
           content: [
             {
               type: "text",
-              text: `QR 생성 실패 (${res.status}): ${errBody}`,
+              text: `QR generation failed (${res.status}): ${errBody}`,
             },
           ],
         };
@@ -118,21 +119,32 @@ server.tool(
 
       const buffer = Buffer.from(await res.arrayBuffer());
 
-      // 파일 저장 요청이 있으면 저장
+      // Save to file if save_path is provided
       if (save_path) {
-        const absPath = resolve(save_path);
+        let absPath = resolve(save_path);
+        let fallback = false;
+        try {
+          await access(dirname(absPath));
+        } catch {
+          const fallbackDir = resolve(homedir(), "Downloads");
+          absPath = resolve(fallbackDir, basename(absPath));
+          fallback = true;
+        }
         await writeFile(absPath, buffer);
+        const msg = fallback
+          ? `Warning: The specified directory does not exist. Saved to ~/Downloads instead.\nSaved to: ${absPath}`
+          : `QR code saved: ${absPath}`;
         return {
           content: [
             {
               type: "text",
-              text: `QR 코드 저장 완료: ${absPath} (${format.toUpperCase()}, ${buffer.length} bytes)\n인코딩 데이터: ${data}`,
+              text: `${msg} (${format.toUpperCase()}, ${buffer.length} bytes)\nEncoded data: ${data}`,
             },
           ],
         };
       }
 
-      // SVG는 텍스트로 반환
+      // Return SVG as text
       if (format === "svg") {
         return {
           content: [
@@ -144,7 +156,7 @@ server.tool(
         };
       }
 
-      // PNG는 base64 이미지로 반환
+      // Return PNG as base64 image
       return {
         content: [
           {
@@ -154,7 +166,7 @@ server.tool(
           },
           {
             type: "text",
-            text: `QR 코드 생성 완료 (PNG, ${buffer.length} bytes)\n인코딩 데이터: ${data}`,
+            text: `QR code generated (PNG, ${buffer.length} bytes)\nEncoded data: ${data}`,
           },
         ],
       };
@@ -164,7 +176,7 @@ server.tool(
         content: [
           {
             type: "text",
-            text: `QR 생성 오류: ${err.message}\n서버 주소: ${SERVER_URL}`,
+            text: `QR generation error: ${err.message}\nServer URL: ${SERVER_URL}`,
           },
         ],
       };
@@ -175,20 +187,20 @@ server.tool(
 // Tool: generate_qr_batch
 server.tool(
   "generate_qr_batch",
-  "여러 개의 QR 코드를 일괄 생성합니다",
+  "Generate multiple QR codes at once",
   {
     items: z
       .array(
         z.object({
-          data: z.string().describe("QR 코드에 인코딩할 텍스트 또는 URL"),
+          data: z.string().describe("Text or URL to encode in the QR code"),
           format: z
             .enum(["png", "svg"])
             .default("png")
-            .describe("출력 형식"),
-          save_path: z.string().describe("저장할 파일 경로"),
+            .describe("Output format"),
+          save_path: z.string().describe("File save path"),
         })
       )
-      .describe("생성할 QR 코드 목록"),
+      .describe("List of QR codes to generate"),
   },
   async ({ items }) => {
     const results = [];
@@ -202,18 +214,27 @@ server.tool(
         });
 
         if (!res.ok) {
-          results.push(`FAIL: ${item.data} → ${res.status} 에러`);
+          results.push(`FAIL: ${item.data} - ${res.status} error`);
           continue;
         }
 
         const buffer = Buffer.from(await res.arrayBuffer());
-        const absPath = resolve(item.save_path);
+        let absPath = resolve(item.save_path);
+        let fallback = false;
+        try {
+          await access(dirname(absPath));
+        } catch {
+          const fallbackDir = resolve(homedir(), "Downloads");
+          absPath = resolve(fallbackDir, basename(absPath));
+          fallback = true;
+        }
         await writeFile(absPath, buffer);
+        const prefix = fallback ? "OK(~/Downloads)" : "OK";
         results.push(
-          `OK: ${item.data} → ${absPath} (${buffer.length} bytes)`
+          `${prefix}: ${item.data} -> ${absPath} (${buffer.length} bytes)`
         );
       } catch (err) {
-        results.push(`FAIL: ${item.data} → ${err.message}`);
+        results.push(`FAIL: ${item.data} -> ${err.message}`);
       }
     }
 
@@ -221,20 +242,20 @@ server.tool(
       content: [
         {
           type: "text",
-          text: `일괄 생성 결과 (${results.length}건):\n${results.join("\n")}`,
+          text: `Batch generation result (${results.length} items):\n${results.join("\n")}`,
         },
       ],
     };
   }
 );
 
-// 서버 시작
+// Start server
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }
 
 main().catch((err) => {
-  console.error("MCP 서버 시작 실패:", err);
+  console.error("MCP server failed to start:", err);
   process.exit(1);
 });

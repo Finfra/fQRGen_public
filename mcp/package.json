@@ -1,6 +1,6 @@
 {
   "name": "fqrgen-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for fQRGen QR code generation via REST API",
   "main": "index.js",
   "type": "module",
