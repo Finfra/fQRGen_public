@@ -1,6 +1,10 @@
+[![ko](https://img.shields.io/badge/lang-ko-red.svg)](./README_kr.md)
+
 # fQRGen
 
-> **The moment you copy, your QR code is ready.**
+<img src="./manual/app-icon.png" width="28" alt="fQRGen icon"> [![Product Page](https://img.shields.io/badge/Product_Page-finfra.kr-blue)](https://finfra.kr/product/fQRGen/en/index.html)
+
+> **AI-integrated QR Code Generator.**
 
 macOS Menu Bar QR Code Generator. Instantly generate QR codes from copied URLs or text, with built-in REST API support.
 

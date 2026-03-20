@@ -1,6 +1,10 @@
+[![en](https://img.shields.io/badge/lang-en-blue.svg)](./README.md)
+
 # fQRGen
 
-> **복사하는 순간, QR 코드가 준비됩니다.**
+<img src="./manual/app-icon.png" width="28" alt="fQRGen icon"> [![제품 페이지](https://img.shields.io/badge/제품_페이지-finfra.kr-blue)](https://finfra.kr/product/fQRGen/kr/index.html)
+
+> **AI연동 가능 QR Code생성기.**
 
 macOS 메뉴바 QR 코드 생성기. 복사한 URL이나 텍스트를 즉시 QR 코드로 변환하며, REST API를 기본 지원합니다.
 
@@ -23,6 +27,21 @@ macOS 메뉴바 QR 코드 생성기. 복사한 URL이나 텍스트를 즉시 QR 
 |------|------|
 | English | [fQRGen - Product Page](http://finfra.kr/product/fQRGen/en/index.html) |
 | 한국어 | [fQRGen - 제품 페이지](http://finfra.kr/product/fQRGen/kr/index.html) |
+
+## Finfra 제품군
+
+| 제품 | 링크 |
+|------|------|
+| Local LLM Agent Coding Support | [제품 페이지](https://finfra.kr/product/LocalLLMAgentCoding/en/index.html) |
+| Mac App Development | [제품 페이지](https://finfra.kr/product/MacAppDev/en/index.html) |
+| fSnippet | [제품 페이지](https://finfra.kr/product/fSnippet/en/index.html) |
+| fWarrange | [제품 페이지](https://finfra.kr/product/fWarrange/en/index.html) |
+| fBanner | [제품 페이지](https://finfra.kr/product/fBanner/en/index.html) |
+| fBoard | [제품 페이지](https://finfra.kr/product/fBoard/en/index.html) |
+| **fQRGen** | [제품 페이지](https://finfra.kr/product/fQRGen/en/index.html) |
+| fGoogleSheet | [제품 페이지](https://finfra.kr/product/fGoogleSheet/en/index.html) |
+| aWallet (DAPP) | [제품 페이지](https://jk7g14.github.io/2018/07/03/EtherMembership.html) |
+| DeepFish (AI) | [제품 페이지](https://jk7g14.github.io/2017/10/16/Fish-Detection-DeepFish.html) |
 
 ## 문서
 
