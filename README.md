@@ -16,6 +16,17 @@ macOS Menu Bar QR Code Generator. Instantly generate QR codes from copied URLs o
 - **QR Code History** - Reuse previously generated codes
 - **Configurable Settings** - Multi-language, color, size customization
 - **Built-in REST API** - Programmatic QR code generation
+- **AI Agent Integration** - Automate with Claude, Gemini, and MCP
+
+## AI Agent Integration
+
+Automate and extend fQRGen with AI agents. All integration methods use the built-in REST API.
+
+| Platform | Integration Method | Details |
+|----------|-------------------|---------|
+| **Claude** | Marketplace Plugin (Skill) | [Install via Claude Code](./agents/claude/) |
+| **Gemini** | Workflow Installation | [Install via Gemini](./agents/gemini/) |
+| **MCP** | Model Context Protocol Server | [MCP Server Setup](./mcp/) |
 
 ## Requirements
 

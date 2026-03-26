@@ -16,6 +16,17 @@ macOS 메뉴바 QR 코드 생성기. 복사한 URL이나 텍스트를 즉시 QR 
 - **QR 코드 히스토리** - 이전에 생성한 코드 재사용
 - **설정 커스터마이징** - 다국어, 색상, 크기 설정
 - **내장 REST API** - 프로그래밍 방식의 QR 코드 생성
+- **AI 에이전트 연동** - Claude, Gemini, MCP로 자동화
+
+## AI 에이전트 연동
+
+AI 에이전트로 fQRGen을 자동화하고 확장하세요. 모든 연동 방식은 내장 REST API를 기반으로 합니다.
+
+| 플랫폼 | 연동 방식 | 상세 |
+|--------|----------|------|
+| **Claude** | Marketplace Plugin (Skill 포함) | [Claude Code에서 설치](./agents/claude/) |
+| **Gemini** | Workflow를 통한 설치 | [Gemini에서 설치](./agents/gemini/) |
+| **MCP** | Model Context Protocol 서버 | [MCP 서버 설정](./mcp/) |
 
 ## 요구 사항
 
