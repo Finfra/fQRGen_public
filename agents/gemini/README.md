@@ -18,8 +18,8 @@ Run the following commands in the root of your project:
 mkdir -p .agent/skills .agent/workflows
 
 # Copy the skill and workflow files
-cp -r _public/agents/gemini/skills/* .agent/skills/
-cp -r _public/agents/gemini/workflows/* .agent/workflows/
+cp -r agents/gemini/skills/* .agent/skills/
+cp -r agents/gemini/workflows/* .agent/workflows/
 ```
 
 *Note: If your agent configuration is stored in `.gemini/` or another directory, adjust the destination path accordingly.*

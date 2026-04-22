@@ -23,7 +23,9 @@ info:
 
 servers:
   - url: http://localhost:3014
-    description: Local development server (default port, configurable in Settings)
+    description: macOS 앱 내장 REST 서버 (기본 포트)
+  - url: http://localhost:3015
+    description: Node.js Express 서버 (기본 포트, 환경변수 PORT로 변경 가능)
 
 paths:
   /:
