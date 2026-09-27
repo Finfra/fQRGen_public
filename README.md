@@ -72,4 +72,7 @@ Automate and extend fQRGen with AI agents. All integration methods use the built
 
 ## License
 
-Copyright (c) finfra.kr. All rights reserved.
+The contents of this repository (MCP server, API docs, agent plugins, localization resources) are licensed under the [MIT License](LICENSE).
+Copyright (c) 2026 Finfra Co., Ltd.
+
+The fQRGen macOS app itself (distributed via the App Store) is not covered by this license.

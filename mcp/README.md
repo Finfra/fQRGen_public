@@ -209,4 +209,4 @@ fQRGen Server (localhost:3014)
 
 ## License
 
-MIT
+[MIT](https://github.com/Finfra/fQRGen_public/blob/main/LICENSE)
